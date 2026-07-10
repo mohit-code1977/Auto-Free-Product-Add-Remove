@@ -109,37 +109,80 @@ class CartItems extends window.StandardEvents.createViewEventElement(HTMLElement
     this.validateQuantity(event);
   }
 
-  onCartUpdate() {
-    if (this.tagName === 'CART-DRAWER-ITEMS') {
-      return fetch(`${routes.cart_url}?section_id=cart-drawer`)
-        .then((response) => response.text())
-        .then((responseText) => {
-          const html = new DOMParser().parseFromString(responseText, 'text/html');
-          const selectors = ['cart-drawer-items', '.cart-drawer__footer'];
-          for (const selector of selectors) {
-            const targetElement = document.querySelector(selector);
-            const sourceElement = html.querySelector(selector);
-            if (targetElement && sourceElement) {
-              targetElement.replaceWith(sourceElement);
-            }
+  // onCartUpdate() {
+  //   if (this.tagName === 'CART-DRAWER-ITEMS') {
+  //     return fetch(`${routes.cart_url}?section_id=cart-drawer`)
+  //       .then((response) => response.text())
+  //       .then((responseText) => {
+  //         const html = new DOMParser().parseFromString(responseText, 'text/html');
+  //         const selectors = ['cart-drawer-items', '.cart-drawer__footer'];
+  //         for (const selector of selectors) {
+  //           const targetElement = document.querySelector(selector);
+  //           const sourceElement = html.querySelector(selector);
+  //           if (targetElement && sourceElement) {
+  //             targetElement.replaceWith(sourceElement);
+  //           }
+  //         }
+  //       })
+  //       .catch((e) => {
+  //         console.error(e);
+  //       });
+  //   } else {
+  //     return fetch(`${routes.cart_url}?section_id=main-cart-items`)
+  //       .then((response) => response.text())
+  //       .then((responseText) => {
+  //         const html = new DOMParser().parseFromString(responseText, 'text/html');
+  //         const sourceQty = html.querySelector('cart-items');
+  //         this.innerHTML = sourceQty.innerHTML;
+  //       })
+  //       .catch((e) => {
+  //         console.error(e);
+  //       });
+  //   }
+  // }
+
+  
+  /*==================================================*/ 
+  /*------------ MY CUSTOM CODE -----------*/ 
+    onCartUpdate() {
+    const sectionsToRender = this.getSectionsToRender();
+    const body = JSON.stringify({
+      updates: {},
+      sections: sectionsToRender.map((section) => section.section),
+      sections_url: window.location.pathname,
+    });
+
+    return fetch(`${routes.cart_update_url}`, { ...fetchConfig(), ...{ body } })
+      .then((response) => response.json())
+      .then((parsedState) => {
+        // Hide/Show Empty States
+        this.classList.toggle('is-empty', parsedState.item_count === 0);
+        const cartDrawerWrapper = document.querySelector('cart-drawer');
+        const cartFooter = document.getElementById('main-cart-footer');
+        if (cartFooter) cartFooter.classList.toggle('is-empty', parsedState.item_count === 0);
+        if (cartDrawerWrapper) cartDrawerWrapper.classList.toggle('is-empty', parsedState.item_count === 0);
+
+        // Update All UI Sections (Bubble, Items, Footer)
+        sectionsToRender.forEach((section) => {
+          const elementToReplace =
+            document.getElementById(section.id).querySelector(section.selector) ||
+            document.getElementById(section.id);
+          if (elementToReplace && parsedState.sections[section.section]) {
+            elementToReplace.innerHTML = this.getSectionInnerHTML(
+              parsedState.sections[section.section],
+              section.selector
+            );
           }
-        })
-        .catch((e) => {
-          console.error(e);
         });
-    } else {
-      return fetch(`${routes.cart_url}?section_id=main-cart-items`)
-        .then((response) => response.text())
-        .then((responseText) => {
-          const html = new DOMParser().parseFromString(responseText, 'text/html');
-          const sourceQty = html.querySelector('cart-items');
-          this.innerHTML = sourceQty.innerHTML;
-        })
-        .catch((e) => {
-          console.error(e);
-        });
-    }
+      })
+      .catch((e) => {
+        console.error(e);
+      });
   }
+
+  /*------------ MY CUSTOM CODE ENDED HERE -----------*/ 
+  /*==================================================*/ 
+
 
   getSectionsToRender() {
     return [

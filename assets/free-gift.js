@@ -3,7 +3,7 @@
 //     threshold: 5000      //---- value for getting gift ----
 // };
 
-/*---------- Get Details Into Obj ----------*/ 
+/*---------- Get Details Into Obj ----------*/
 const FREE_GIFT = {
     enabled: window.freeGiftConfig?.enabled,
     variantId: Number(window.freeGiftConfig?.variantId),
@@ -18,8 +18,8 @@ console.log("Free_Gift JS Code Loaded.........");
 async function getCart() {
     try {
         const response = await fetch("/cart.js");
-        console.log("Print response : ", response.json());
-        
+        // console.log("Print response : ", response.json());
+
 
         if (!response.ok) {
             throw new Error("Failed to fetch cart");
@@ -35,10 +35,18 @@ async function getCart() {
 
 /*---------- Test Function ----------*/
 async function handleFreeGift() {
+    //   console.log("Checking Free Gift. Current Config: ", FREE_GIFT);
+    // if (!FREE_GIFT.enabled || !FREE_GIFT.variantId || !FREE_GIFT.threshold) {
+    //     console.log("Free gift config disabled or missing!"); // YEH BHI DAAL DE
+    //     return false;
+    // }
+
     if (!FREE_GIFT.enabled || !FREE_GIFT.variantId || !FREE_GIFT.threshold) {
         return false;
     }
     const cart = await getCart();
+    // console.log("Cart Data: ", cart);
+
 
     if (!cart) return false;
 
@@ -62,11 +70,18 @@ async function handleFreeGift() {
             await addGift();
             cartChanged = true;
         }
+        else {
+            console.log("Nothing T ");
+        }
     } else {
         if (giftExists) {
             await removeGift(cart);
             console.log("REMOVE FREE GIFT");
             cartChanged = true;
+        }
+        else{
+            console.log("Nothing TO DO");
+            
         }
     }
 

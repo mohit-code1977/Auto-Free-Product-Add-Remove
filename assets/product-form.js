@@ -94,58 +94,28 @@ if (!customElements.get('product-form')) {
                 'modalClosed',
                 () => {
                   /*==============================================*/
-                  setTimeout(async () => {
-                    if (window.handleFreeGift) {
-                      const giftChanged = await window.handleFreeGift();
-
-                      if (giftChanged) {
-                        // return;
-                        const freshResponse = await fetch(
-                          `${routes.cart_url}.js?sections=${this.cart.getSectionsToRender().map(s => s.id).join(',')}`
-                        );
-                        const freshData = await freshResponse.json();
-                        this.cart.renderContents(freshData);
-                        return;
-                      }
-                    }
-
+                                    setTimeout(async () => {
                     CartPerformance.measure("add:paint-updated-sections", () => {
                       this.cart.renderContents(response);
                     });
 
-                    // CartPerformance.measure("add:paint-updated-sections", () => {
-
-                    //   if (window.handleFreeGift) {
-                    //     await window.handleFreeGift();
-                    //   }
-
-                    //   this.cart.renderContents(response);
-
-                    //   // window.handleFreeGift && window.handleFreeGift();
-                    // });
-                    /*==============================================*/
+                    if (window.handleFreeGift) {
+                      await window.handleFreeGift();
+                    }
                   });
-                },
+
+               },
                 { once: true }
               );
               quickAddModal.hide(true);
             } else {
               /*=================================*/
-              if (window.handleFreeGift) {
-                const giftChanged = await window.handleFreeGift();
-
-                if (giftChanged) {
-                  return;
-                }
-              }
-
-              CartPerformance.measure("add:paint-updated-sections", () => {
+               CartPerformance.measure("add:paint-updated-sections", () => {
                 this.cart.renderContents(response);
               });
-              // CartPerformance.measure("add:paint-updated-sections", () => {
-              //   this.cart.renderContents(response);
-              //   window.handleFreeGift && window.handleFreeGift();
-              // });
+              if (window.handleFreeGift) {
+                await window.handleFreeGift();
+              }
               /*=================================*/
             }
           })
