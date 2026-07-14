@@ -153,7 +153,7 @@ async function addGift(variantId) {
 
         const data = await response.json();
         console.log("Gift Added Successfully", data);
-
+        return data;
     }
     catch (e) {
         console.log("Error : ", e);
