@@ -36,9 +36,9 @@ async function handleFreeGift() {
 
     if (!cart) return false;
 
-    let giftExists = hasGift(cart);
+    const variantId = FREE_GIFT.variantId;
+    let giftExists = hasGift(cart, variantId);
     let cartChanged = false;
-    let variantId = FREE_GIFT.variantId;
 
 
     const subtotal = cart.items.reduce((total, item) => {
@@ -50,7 +50,7 @@ async function handleFreeGift() {
     //---- free product condition ----
     if (subtotal >= FREE_GIFT.threshold) {
         if (!giftExists) {
-            await addGift(variantID);
+            await addGift(variantId);
             cartChanged = true;
         }
         else {
@@ -58,13 +58,12 @@ async function handleFreeGift() {
         }
     } else {
         if (giftExists) {
-            await removeGift(cart, variantID);
+            await removeGift(cart, variantId);
             console.log("REMOVE FREE GIFT");
             cartChanged = true;
         }
         else {
             // console.log("Nothing TO DO");
-
         }
     }
 
@@ -85,7 +84,9 @@ async function handleFreeGift() {
 async function handleProductBasedFreeGift(triggerVariantId, freeGiftVariantId) {
     const cart = await getCart();
 
-   if (!cart) return;
+    if (!cart) return;
+
+    let productUpdate = false;
 
     //---- check variant ids ----
     if (!triggerVariantId || !freeGiftVariantId) {
@@ -98,41 +99,58 @@ async function handleProductBasedFreeGift(triggerVariantId, freeGiftVariantId) {
     freeGiftVariantId = Number(freeGiftVariantId);
 
     //---- check trigger & gift product existence ----
-    const giftProductExists = hasGiftProduct(cart, freeGiftVariantId);
+    const giftProductExists = hasGift(cart, freeGiftVariantId);
+    const isTriggerProductExist = hasGift(cart, triggerVariantId)
 
+    console.log("Print isTriggerProductExist : ", isTriggerProductExist);
+
+    //---- check triggerproduct ----
+    if (isTriggerProductExist) {
         //--- Gift Not Present ---
         if (!giftProductExists) {
-            console.log("Gift Product Add Deserving.........");
+            console.log("Gift Product Added Successfully");
 
             //--- Add Gift ---
-            // await addGift(freeGiftVariantId);
+            await addGift(freeGiftVariantId);
+            productUpdate = true;
         }
         //--- Gift Already Present ---
         else {
             console.log("Gift Product Already Present in the cart.........");
         }
     }
-    
+    else {
+        //--- gift is present ----
+        if (giftProductExists) {
+            await removeGift(cart, freeGiftVariantId)
+            console.log("Gift Deleted Successfully");
+            productUpdate = true;
+        }
+        else {
+            console.log("Nothing TO DO");
+        }
+    }
 
 
-/*---------- Check Product_For_Gift is Exist or Not ----------*/
-function hasGiftProduct(cart, freeGiftVariantId) {
-    return cart.items.some(
-        item => item.variant_id === freeGiftVariantId
-    );
+    if (productUpdate) {
+        await publish(PUB_SUB_EVENTS.cartUpdate, {
+            source: "free-product-gift",
+            cartData: await getCart()
+        });
+
+        return true;
+    }
 }
+
 
 
 
 /*---------- Checking Gift Existence ----------*/
-function hasGift(cart) {
-    return cart.items.some((item) => {
-        // console.log("Print Items : ", item);
-
-        return item.variant_id === FREE_GIFT.variantId;
-    });
+function hasGift(cart, variantId) {
+    return cart.items.some(
+        item => item.variant_id === variantId
+    );
 }
-
 
 
 /*---------- Add Free Gift ----------*/
@@ -187,14 +205,12 @@ async function removeGift(cart, variantId) {
             }
 
             const data = await response.json();
-            console.log(data);
 
             return data;
         }
 
     } catch (error) {
         console.log("Gift Product Removing Error : ", error);
-
     }
 }
 

@@ -141,10 +141,10 @@ class CartItems extends window.StandardEvents.createViewEventElement(HTMLElement
   //   }
   // }
 
-  
-  /*==================================================*/ 
-  /*------------ MY CUSTOM CODE -----------*/ 
-    onCartUpdate() {
+
+  /*==================================================*/
+  /*------------ MY CUSTOM CODE -----------*/
+  onCartUpdate() {
     const sectionsToRender = this.getSectionsToRender();
     const body = JSON.stringify({
       updates: {},
@@ -180,8 +180,8 @@ class CartItems extends window.StandardEvents.createViewEventElement(HTMLElement
       });
   }
 
-  /*------------ MY CUSTOM CODE ENDED HERE -----------*/ 
-  /*==================================================*/ 
+  /*------------ MY CUSTOM CODE ENDED HERE -----------*/
+  /*==================================================*/
 
 
   getSectionsToRender() {
@@ -244,7 +244,7 @@ class CartItems extends window.StandardEvents.createViewEventElement(HTMLElement
         } else {
           this.resolveCartLinesUpdate(linesUpdateDeferred, parsedState);
         }
-        
+
 
         CartPerformance.measure(`${eventTarget}:paint-updated-sections`, () => {
           const quantityElement =
@@ -309,6 +309,25 @@ class CartItems extends window.StandardEvents.createViewEventElement(HTMLElement
           }
         }
         /*----------- FREE GIFT END ----------*/
+
+        /*----- FREE PRODUCT BASED GIFT -----*/
+        if (window.handleProductBasedFreeGift && quantity === 0) {
+          const row = event.target.closest('.cart-item');
+          const freeGiftVariantId = row.dataset.freeGiftVariantId;
+          const triggerVariantId = row.dataset.triggerVariantId;
+
+          if (freeGiftVariantId && triggerVariantId) {
+            const productUpdate = await window.handleProductBasedFreeGift(triggerVariantId, freeGiftVariantId)
+
+            if (productUpdate) {
+              await this.onCartUpdate();
+            }
+          }
+
+        }
+
+        /*----- FREE PRODUCT BASED GIFT -----*/
+
         /*===========================================================*/
 
 

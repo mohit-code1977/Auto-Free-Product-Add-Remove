@@ -17,7 +17,7 @@ if (!customElements.get('product-form')) {
         this.hideErrors = this.dataset.hideErrors === 'true';
       }
 
-     async onSubmitHandler(evt) {
+      async onSubmitHandler(evt) {
         evt.preventDefault();
         if (this.submitButton.getAttribute('aria-disabled') === 'true') return;
 
@@ -42,28 +42,9 @@ if (!customElements.get('product-form')) {
         }
         config.body = formData;
 
-        const variantId = formData.get('id');
+        const variantId = formData?.get('id');
         const quantity = parseInt(formData.get('quantity')) || 1;
         const linesUpdateDeferred = this.createCartLinesUpdateEvent(variantId, quantity);
-
-
-        /*====================================================*/
-        /*====================================================*/
-
-        const productComponent = this.closest("product-component");
-        const freeGiftVariantId = productComponent.dataset.freeProductVariantId;
-        
-        //----- call the function ----- 
-        await window.handleProductBasedFreeGift(Number(variantId), freeGiftVariantId);
-
-
-        // console.log(productComponent.dataset.freeProductVariantId);
-
-        /*====================================================*/
-        /*====================================================*/
-
-        
-
 
         fetch(`${routes.cart_add_url}`, config)
           .then((response) => response.json())
@@ -76,8 +57,6 @@ if (!customElements.get('product-form')) {
                 message: response.message,
               });
 
-
-
               this.handleErrorMessage(response.description);
               this.dispatchCartErrorEvent(response.description || response.message, 'INVALID');
               linesUpdateDeferred?.reject(new Error(response.description || response.message));
@@ -89,7 +68,28 @@ if (!customElements.get('product-form')) {
               soldOutMessage.classList.remove('hidden');
               this.error = true;
               return;
-            } else if (!this.cart) {
+            }
+
+            /*====================================================*/
+            /*====================================================*/
+            // ---------- write your function here 
+            //------ call from here
+            const productComponent = this.closest("product-component");
+            if (productComponent) {
+              const freeGiftVariantId = productComponent.dataset.freeProductVariantId;
+
+              //----- call the function ----- 
+              if (freeGiftVariantId) {
+                await window.handleProductBasedFreeGift(
+                  Number(variantId),
+                  freeGiftVariantId
+                );
+              }
+            }
+            /*====================================================*/
+            /*====================================================*/
+
+            if (!this.cart) {
               this.resolveCartLinesUpdate(linesUpdateDeferred);
               window.location = window.routes.cart_url;
               return;
