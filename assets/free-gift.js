@@ -1,4 +1,3 @@
-
 /*---------- Get Details Into Obj ----------*/
 const FREE_GIFT = {
     enabled: window.freeGiftConfig?.enabled,
@@ -11,8 +10,6 @@ const FREE_GIFT = {
 async function getCart() {
     try {
         const response = await fetch("/cart.js");
-        // console.log("Print response : ", response.json());
-
 
         if (!response.ok) {
             throw new Error("Failed to fetch cart");
@@ -20,7 +17,7 @@ async function getCart() {
         return await response.json();
     }
     catch (error) {
-        // console.error("Cart fetch error:", error);
+        console.error("Cart fetch error:", error);
         return null;
     }
 }
@@ -28,24 +25,25 @@ async function getCart() {
 
 /*---------- HandleFreeGift Based On Product Function ----------*/
 async function handleFreeGift() {
-
+    //---- check properties ----
     if (!FREE_GIFT.enabled || !FREE_GIFT.variantId || !FREE_GIFT.threshold) {
         return false;
     }
     const cart = await getCart();
 
+    //---- check cart is not empty ----
     if (!cart) return false;
 
+    //---- get data ---- 
     const variantId = FREE_GIFT.variantId;
-    let giftExists = hasGift(cart, variantId);
+    let giftExists = isVariantInCart(cart, variantId);
     let cartChanged = false;
 
-
+    //---- get subtotal ----
     const subtotal = cart.items.reduce((total, item) => {
         if (item.variant_id === FREE_GIFT.variantId) return total;
         return total + item.final_line_price;
     }, 0);
-
 
     //---- free product condition ----
     if (subtotal >= FREE_GIFT.threshold) {
@@ -53,17 +51,11 @@ async function handleFreeGift() {
             await addGift(variantId);
             cartChanged = true;
         }
-        else {
-            // console.log("Nothing TO DO");
-        }
     } else {
         if (giftExists) {
             await removeGift(cart, variantId);
             console.log("REMOVE FREE GIFT");
             cartChanged = true;
-        }
-        else {
-            // console.log("Nothing TO DO");
         }
     }
 
@@ -86,7 +78,7 @@ async function handleProductBasedFreeGift(triggerVariantId, freeGiftVariantId) {
 
     if (!cart) return;
 
-    let productUpdate = false;
+    let cartChanged = false;
 
     //---- check variant ids ----
     if (!triggerVariantId || !freeGiftVariantId) {
@@ -99,24 +91,16 @@ async function handleProductBasedFreeGift(triggerVariantId, freeGiftVariantId) {
     freeGiftVariantId = Number(freeGiftVariantId);
 
     //---- check trigger & gift product existence ----
-    const giftProductExists = hasGift(cart, freeGiftVariantId);
-    const isTriggerProductExist = hasGift(cart, triggerVariantId)
-
-    console.log("Print isTriggerProductExist : ", isTriggerProductExist);
+    const giftProductExists = isVariantInCart(cart, freeGiftVariantId);
+    const triggerProductExist = isVariantInCart(cart, triggerVariantId)
 
     //---- check triggerproduct ----
-    if (isTriggerProductExist) {
+    if (triggerProductExist) {
         //--- Gift Not Present ---
         if (!giftProductExists) {
-            console.log("Gift Product Added Successfully");
-
-            //--- Add Gift ---
             await addGift(freeGiftVariantId);
-            productUpdate = true;
-        }
-        //--- Gift Already Present ---
-        else {
-            console.log("Gift Product Already Present in the cart.........");
+            console.log("Gift Product Added Successfully");
+            cartChanged = true;
         }
     }
     else {
@@ -124,15 +108,13 @@ async function handleProductBasedFreeGift(triggerVariantId, freeGiftVariantId) {
         if (giftProductExists) {
             await removeGift(cart, freeGiftVariantId)
             console.log("Gift Deleted Successfully");
-            productUpdate = true;
-        }
-        else {
-            console.log("Nothing TO DO");
+            cartChanged = true;
         }
     }
 
-
-    if (productUpdate) {
+    
+    //----- Send Updated Cart and Refresh It ----- 
+    if (cartChanged) {
         await publish(PUB_SUB_EVENTS.cartUpdate, {
             source: "free-product-gift",
             cartData: await getCart()
@@ -143,10 +125,8 @@ async function handleProductBasedFreeGift(triggerVariantId, freeGiftVariantId) {
 }
 
 
-
-
 /*---------- Checking Gift Existence ----------*/
-function hasGift(cart, variantId) {
+function isVariantInCart(cart, variantId) {
     return cart.items.some(
         item => item.variant_id === variantId
     );
@@ -205,8 +185,6 @@ async function removeGift(cart, variantId) {
             }
 
             const data = await response.json();
-
-            return data;
         }
 
     } catch (error) {
