@@ -415,6 +415,12 @@
         variantId: {{ settings.free_gift_product.selected_or_first_available_variant.id | json }},
         threshold: {{ settings.free_gift_threshold | times: 100 | json }}
       };
+
+      {% comment %} window.freeGiftBasedOnProduct = {
+        enableProductGift: {{ settings.enable_product_based_free_gift | json }},
+        triggerVariantId: {{ settings.trigger_product.selected_or_first_available_variant.id  | json }},
+        freeGiftVariantId: {{ settings.free_gift_to_product.selected_or_first_available_variant.id  | json }}
+      }; {% endcomment %}
     </script>
 
     <script src="{{ 'free-gift.js' | asset_url }}" defer="defer"></script>

@@ -1,7 +1,3 @@
-// const FREE_GIFT = {
-//     variantId: 42942812815431,      //---- free gift product ----
-//     threshold: 5000      //---- value for getting gift ----
-// };
 
 /*---------- Get Details Into Obj ----------*/
 const FREE_GIFT = {
@@ -9,9 +5,6 @@ const FREE_GIFT = {
     variantId: Number(window.freeGiftConfig?.variantId),
     threshold: Number(window.freeGiftConfig?.threshold)
 };  //----- use optional chaining for checking property is exist or not -----
-
-
-console.log("Free_Gift JS Code Loaded.........");
 
 
 /*---------- Get Card Details ----------*/
@@ -27,37 +20,28 @@ async function getCart() {
         return await response.json();
     }
     catch (error) {
-        console.error("Cart fetch error:", error);
+        // console.error("Cart fetch error:", error);
         return null;
     }
 }
 
 
-/*---------- Test Function ----------*/
+/*---------- HandleFreeGift Based On Product Function ----------*/
 async function handleFreeGift() {
-    //   console.log("Checking Free Gift. Current Config: ", FREE_GIFT);
-    // if (!FREE_GIFT.enabled || !FREE_GIFT.variantId || !FREE_GIFT.threshold) {
-    //     console.log("Free gift config disabled or missing!"); // YEH BHI DAAL DE
-    //     return false;
-    // }
 
     if (!FREE_GIFT.enabled || !FREE_GIFT.variantId || !FREE_GIFT.threshold) {
         return false;
     }
     const cart = await getCart();
-    // console.log("Cart Data: ", cart);
-
 
     if (!cart) return false;
 
-    // const getItem = getGiftItem(cart);
-
-    // let subtotal = cart.original_total_price / 100;
     let giftExists = hasGift(cart);
     let cartChanged = false;
+    let variantId = FREE_GIFT.variantId;
 
 
-    subtotal = cart.items.reduce((total, item) => {
+    const subtotal = cart.items.reduce((total, item) => {
         if (item.variant_id === FREE_GIFT.variantId) return total;
         return total + item.final_line_price;
     }, 0);
@@ -66,22 +50,21 @@ async function handleFreeGift() {
     //---- free product condition ----
     if (subtotal >= FREE_GIFT.threshold) {
         if (!giftExists) {
-            console.log("ADD FREE GIFT");
-            await addGift();
+            await addGift(variantID);
             cartChanged = true;
         }
         else {
-            console.log("Nothing T ");
+            // console.log("Nothing TO DO");
         }
     } else {
         if (giftExists) {
-            await removeGift(cart);
+            await removeGift(cart, variantID);
             console.log("REMOVE FREE GIFT");
             cartChanged = true;
         }
-        else{
-            console.log("Nothing TO DO");
-            
+        else {
+            // console.log("Nothing TO DO");
+
         }
     }
 
@@ -94,16 +77,51 @@ async function handleFreeGift() {
 
         return true;
     }
-
-
-    // if (cartChanged) {
-    //     return true;
-    // }
-
-    // return cartChanged;
 }
 
-// handleFreeGift();
+
+
+/*---------- Free Gift To Products ----------*/
+async function handleProductBasedFreeGift(triggerVariantId, freeGiftVariantId) {
+    const cart = await getCart();
+
+   if (!cart) return;
+
+    //---- check variant ids ----
+    if (!triggerVariantId || !freeGiftVariantId) {
+        console.log("Variant ID is Empty");
+        return;
+    }
+
+    //-- Convert to Number (FormData returns string) --
+    triggerVariantId = Number(triggerVariantId);
+    freeGiftVariantId = Number(freeGiftVariantId);
+
+    //---- check trigger & gift product existence ----
+    const giftProductExists = hasGiftProduct(cart, freeGiftVariantId);
+
+        //--- Gift Not Present ---
+        if (!giftProductExists) {
+            console.log("Gift Product Add Deserving.........");
+
+            //--- Add Gift ---
+            // await addGift(freeGiftVariantId);
+        }
+        //--- Gift Already Present ---
+        else {
+            console.log("Gift Product Already Present in the cart.........");
+        }
+    }
+    
+
+
+/*---------- Check Product_For_Gift is Exist or Not ----------*/
+function hasGiftProduct(cart, freeGiftVariantId) {
+    return cart.items.some(
+        item => item.variant_id === freeGiftVariantId
+    );
+}
+
 
 
 /*---------- Checking Gift Existence ----------*/
@@ -118,7 +136,7 @@ function hasGift(cart) {
 
 
 /*---------- Add Free Gift ----------*/
-async function addGift() {
+async function addGift(variantId) {
     try {
         const response = await fetch('/cart/add.js', {
             method: "POST",
@@ -126,7 +144,7 @@ async function addGift() {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                id: FREE_GIFT.variantId,
+                id: variantId,
                 quantity: 1
             })
         });
@@ -147,9 +165,9 @@ async function addGift() {
 
 
 /*---------- Remove Free Gift Product ----------*/
-async function removeGift(cart) {
+async function removeGift(cart, variantId) {
     try {
-        const giftItemData = getGiftItem(cart);
+        const giftItemData = getGiftItem(cart, variantId);
 
         //---- check gift-item-data != blank ----
         if (giftItemData) {
@@ -172,7 +190,6 @@ async function removeGift(cart) {
             console.log(data);
 
             return data;
-            // console.log("print from removeGift() line num",data);
         }
 
     } catch (error) {
@@ -183,9 +200,13 @@ async function removeGift(cart) {
 
 
 /*---------- Get Gift Product Item From Card ----------*/
-function getGiftItem(cart) {
-    return cart.items.find(item => item.variant_id === FREE_GIFT.variantId)
+function getGiftItem(cart, variantId) {
+    return cart.items.find(item => item.variant_id === variantId)
 }
 
 
+
+
+/*---------- Makes Funciton Uses For Globale Level ----------*/
 window.handleFreeGift = handleFreeGift;
+window.handleProductBasedFreeGift = handleProductBasedFreeGift;

@@ -7,7 +7,7 @@
     "theme_documentation_url": "https://help.shopify.com/manual/online-store/themes",
     "theme_support_url": "https://support.shopify.com/"
   },
-  /*------------------------------------------*/
+  /*==========================================*/
   /*----------- Our Custom Setting ----------*/
   {
     "name": "Free Gift Product",
@@ -32,8 +32,30 @@
       //--------------------------------------
     ]
   },
+  /*---------- Free Gift Based On Products -----------*/
+  // {
+  //   "name": "Product Based Free Gift",
+  //   "settings": [
+  //     {
+  //       "type": "checkbox",
+  //       "id": "enable_product_based_free_gift",
+  //       "label": "Enable Product Based Free Gift",
+  //       "default": true
+  //     },
+  //     {
+  //       "type": "product",
+  //       "id": "trigger_product",
+  //       "label": "Trigger Product"
+  //     },
+  //     {
+  //       "type": "product",
+  //       "id": "free_gift_to_product",
+  //       "label": "Free Gift Product"
+  //     }
+  //   ]
+  // },
   /*------------------------------------------*/
-
+  /*==========================================*/
   {
     "name": "t:settings_schema.logo.name",
     "settings": [

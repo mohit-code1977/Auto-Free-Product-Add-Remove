@@ -17,7 +17,7 @@ if (!customElements.get('product-form')) {
         this.hideErrors = this.dataset.hideErrors === 'true';
       }
 
-      onSubmitHandler(evt) {
+     async onSubmitHandler(evt) {
         evt.preventDefault();
         if (this.submitButton.getAttribute('aria-disabled') === 'true') return;
 
@@ -45,6 +45,25 @@ if (!customElements.get('product-form')) {
         const variantId = formData.get('id');
         const quantity = parseInt(formData.get('quantity')) || 1;
         const linesUpdateDeferred = this.createCartLinesUpdateEvent(variantId, quantity);
+
+
+        /*====================================================*/
+        /*====================================================*/
+
+        const productComponent = this.closest("product-component");
+        const freeGiftVariantId = productComponent.dataset.freeProductVariantId;
+        
+        //----- call the function ----- 
+        await window.handleProductBasedFreeGift(Number(variantId), freeGiftVariantId);
+
+
+        // console.log(productComponent.dataset.freeProductVariantId);
+
+        /*====================================================*/
+        /*====================================================*/
+
+        
+
 
         fetch(`${routes.cart_add_url}`, config)
           .then((response) => response.json())
@@ -94,7 +113,7 @@ if (!customElements.get('product-form')) {
                 'modalClosed',
                 () => {
                   /*==============================================*/
-                                    setTimeout(async () => {
+                  setTimeout(async () => {
                     CartPerformance.measure("add:paint-updated-sections", () => {
                       this.cart.renderContents(response);
                     });
@@ -104,13 +123,13 @@ if (!customElements.get('product-form')) {
                     }
                   });
 
-               },
+                },
                 { once: true }
               );
               quickAddModal.hide(true);
             } else {
               /*=================================*/
-               CartPerformance.measure("add:paint-updated-sections", () => {
+              CartPerformance.measure("add:paint-updated-sections", () => {
                 this.cart.renderContents(response);
               });
               if (window.handleFreeGift) {

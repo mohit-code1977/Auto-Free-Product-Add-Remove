@@ -263,6 +263,10 @@
                     {%- assign lazy_load = true -%}
                   {%- endif -%}
 
+                  {% comment %} {% unless item.tags contains 'free-gift' %} {% endcomment %}
+
+
+
                   <li
                     class="grid__item{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
                     {% if settings.animations_reveal_on_scroll %}
@@ -271,6 +275,7 @@
                   >
                     {%- case item.object_type -%}
                       {%- when 'product' -%}
+                        
                         {%- capture product_settings -%}{%- if section.settings.product_show_vendor -%}vendor,{%- endif -%}title,price{%- endcapture -%}
                         {% render 'card-product',
                           card_product: item,
@@ -284,6 +289,7 @@
                           product_view_context: 'search'
                         %}
                         {%- assign skip_card_product_styles = true -%}
+                        {% comment %} {% endunless %} {% endcomment %}
                       {%- when 'article' -%}
                         {% render 'article-card',
                           article: item,

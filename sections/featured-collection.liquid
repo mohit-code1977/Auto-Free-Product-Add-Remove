@@ -109,6 +109,11 @@
               {% if lazy_load == false and forloop.index > max_columns_to_show %}
                 {% assign lazy_load = true %}
               {% endif %}
+              
+              <!--====================================================-->
+              {% unless product.tags contains 'free-gift' %}
+                 <!--====================================================-->
+
               <li
                 id="Slide-{{ section.id }}-{{ forloop.index }}"
                 class="grid__item{% if show_mobile_slider or show_desktop_slider %} slider__slide{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
@@ -131,6 +136,9 @@
                   product_view_context: 'collection'
                 %}
               </li>
+               <!--====================================================-->
+              {% endunless %}
+               <!--====================================================-->
               {%- assign skip_card_product_styles = true -%}
             {%- endfor -%}
           {% endpaginate %}

@@ -162,6 +162,9 @@
                   {%- if forloop.index > 2 -%}
                     {%- assign lazy_load = true -%}
                   {%- endif -%}
+                  <!---==================================================--->
+                  {%  unless product.tags contains 'free-gift' %}
+                    {% unless product.tags contains 'hidden-gift' %}                      
                   <li
                     class="grid__item{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
                     {% if settings.animations_reveal_on_scroll %}
@@ -169,7 +172,6 @@
                       style="--animation-order: {{ forloop.index }};"
                     {% endif %}
                   >
-                    {% unless product.tags contains 'hidden-gift' %}                      
                     {% render 'card-product',
                       card_product: product,
                       media_aspect_ratio: section.settings.image_ratio,
@@ -183,8 +185,10 @@
                       section_id: section.id,
                       product_view_context: 'collection'
                     %}
-                    {% endunless %}
                   </li>
+                   {% endunless %}
+                   {% endunless %}
+                  <!---==================================================--->
                   {%- assign skip_card_product_styles = true -%}
                 {%- endfor -%}
               </ul>
