@@ -76,6 +76,25 @@ class CartNotification extends HTMLElement {
     this.open();
   }
 
+
+
+  /*================================================*/
+  /*================ CUSTOM CODE ==================*/
+  updateNotificationProduct(parsedState) {
+    this.cartItemKey = parsedState.key;
+
+    const product = document.getElementById("cart-notification-product");
+
+    if (!product) return;
+
+    product.innerHTML = this.getSectionInnerHTML(
+      parsedState.sections["cart-notification-product"],
+      `[id="cart-notification-product-${this.cartItemKey}"]`
+    );
+  }
+  /*========== CUSTOM CODE ENDED HERE =============*/
+  /*================================================*/
+
   getSectionsToRender() {
     return [
       {

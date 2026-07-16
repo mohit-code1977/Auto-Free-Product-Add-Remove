@@ -98,9 +98,12 @@ async function handleProductBasedFreeGift(triggerVariantId, freeGiftVariantId) {
     if (triggerProductExist) {
         //--- Gift Not Present ---
         if (!giftProductExists) {
-            await addGift(freeGiftVariantId);
-            console.log("Gift Product Added Successfully");
-            cartChanged = true;
+            const giftResponse = await addGift(freeGiftVariantId);
+            // console.log(giftResponse);
+            return giftResponse;
+            // await addGift(freeGiftVariantId);
+            // console.log("Gift Product Added Successfully");
+            // cartChanged = true;
         }
     }
     else {
@@ -112,7 +115,7 @@ async function handleProductBasedFreeGift(triggerVariantId, freeGiftVariantId) {
         }
     }
 
-    
+
     //----- Send Updated Cart and Refresh It ----- 
     if (cartChanged) {
         await publish(PUB_SUB_EVENTS.cartUpdate, {
@@ -136,15 +139,35 @@ function isVariantInCart(cart, variantId) {
 /*---------- Add Free Gift ----------*/
 async function addGift(variantId) {
     try {
-        const response = await fetch('/cart/add.js', {
+        const formData = new FormData();
+
+        formData.append("id", variantId);
+        formData.append("quantity", 1);
+
+        const cartNotification = document.querySelector("cart-notification");
+
+        if (cartNotification) {
+            formData.append(
+                "sections",
+                cartNotification
+                    .getSectionsToRender()
+                    .map(section => section.id)
+            );
+
+            formData.append(
+                "sections_url",
+                window.location.pathname
+            );
+
+            cartNotification.setActiveElement(document.activeElement);
+        }
+
+        const response = await fetch("/cart/add.js", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "X-Requested-With": "XMLHttpRequest"
             },
-            body: JSON.stringify({
-                id: variantId,
-                quantity: 1
-            })
+            body: formData
         });
 
         if (!response.ok) {
@@ -152,14 +175,43 @@ async function addGift(variantId) {
         }
 
         const data = await response.json();
-        console.log("Gift Added Successfully", data);
-        return data;
-    }
-    catch (e) {
-        console.log("Error : ", e);
 
+        console.log("Gift Added Successfully", data);
+
+        return data;
+
+    } catch (error) {
+        console.error("Gift Add Error :", error);
+        return null;
     }
 }
+
+// async function addGift(variantId) {
+//     try {
+//         const response = await fetch('/cart/add.js', {
+//             method: "POST",
+//             headers: {
+//                 "Content-Type": "application/json"
+//             },
+//             body: JSON.stringify({
+//                 id: variantId,
+//                 quantity: 1
+//             })
+//         });
+
+//         if (!response.ok) {
+//             throw new Error("Unable to add free gift");
+//         }
+
+//         const data = await response.json();
+//         console.log("Gift Added Successfully", data);
+//         return data;
+//     }
+//     catch (e) {
+//         console.log("Error : ", e);
+
+//     }
+// }
 
 
 /*---------- Remove Free Gift Product ----------*/

@@ -74,17 +74,23 @@ if (!customElements.get('product-form')) {
             /*====================================================*/
             // ---------- write your function here 
             //------ call from here
+            let giftResponse = null;
+
             const productComponent = this.closest("product-component");
+            // console.log("Print product component : ", productComponent);
+            
             if (productComponent) {
               const freeGiftVariantId = productComponent.dataset.freeProductVariantId;
 
-              //----- call the function ----- 
               if (freeGiftVariantId) {
-                await window.handleProductBasedFreeGift(
+                giftResponse = await window.handleProductBasedFreeGift(
                   Number(variantId),
                   freeGiftVariantId
                 );
               }
+
+              console.log("Print gift response : ", giftResponse);
+              
             }
             /*====================================================*/
             /*====================================================*/
@@ -116,6 +122,13 @@ if (!customElements.get('product-form')) {
                   setTimeout(async () => {
                     CartPerformance.measure("add:paint-updated-sections", () => {
                       this.cart.renderContents(response);
+
+                      // 1 sec baad gift dikhao
+                      if (giftResponse) {
+                        setTimeout(() => {
+                          this.cart.renderContents(giftResponse);
+                        }, 2000);
+                      }
                     });
 
                     if (window.handleFreeGift) {
@@ -128,14 +141,24 @@ if (!customElements.get('product-form')) {
               );
               quickAddModal.hide(true);
             } else {
-              /*=================================*/
-              CartPerformance.measure("add:paint-updated-sections", () => {
-                this.cart.renderContents(response);
-              });
-              if (window.handleFreeGift) {
-                await window.handleFreeGift();
-              }
-              /*=================================*/
+               CartPerformance.measure("add:paint-updated-sections", () => {
+
+        // Pehle original product notification
+        this.cart.renderContents(response);
+
+        // Agar gift add hua hai to 1 second baad gift notification
+        if (giftResponse) {
+            setTimeout(() => {
+                this.cart.renderContents(giftResponse);
+            }, 2000);
+        }
+
+    });
+
+    if (window.handleFreeGift) {
+        await window.handleFreeGift();
+    }
+
             }
           })
           .catch((e) => {
